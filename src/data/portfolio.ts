@@ -30,10 +30,10 @@ export const profile = {
     linkedin: 'https://www.linkedin.com/in/krishna-sidhvi-nekkanti',
     github: 'https://github.com/krishnasidhvi',
   },
-  resumePdf: '/assets/Krishna_Sidhvi_Nekkanti_Resume.pdf',
+  resumePdf: `${import.meta.env.BASE_URL}assets/Krishna_Sidhvi_Nekkanti_Resume.pdf`,
   portrait: {
-    src: '/assets/krishna_3d_avatar.jpg',
-    srcSet: '/assets/krishna_3d_avatar.jpg 720w',
+    src: `${import.meta.env.BASE_URL}assets/krishna_3d_avatar.jpg`,
+    srcSet: `${import.meta.env.BASE_URL}assets/krishna_3d_avatar.jpg 720w`,
     alt: 'Stylized 3D Avatar of Krishna Sidhvi Nekkanti',
   },
   interests: ['Cloud Data Lakehouses (AWS)', 'Real-Time Event Streams (Kafka)', 'Generative AI & LLM Evaluation', 'Executive Business Intelligence'],
