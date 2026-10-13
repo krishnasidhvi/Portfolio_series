@@ -3,6 +3,8 @@ import { motion, useMotionValue, useScroll, useSpring, useTransform } from 'fram
 import { certifications, education, profile, projects, type ProfileId } from '../data/portfolio';
 import { useFinePointer } from '../hooks/useMedia';
 import { useSmoothScroll } from '../hooks/smoothScroll';
+import { useHudMode } from '../hooks/useTelemetryHud';
+import { playUiClick } from '../utils/sound';
 import { EASE, Magnetic, Particles } from './fx';
 import { SeriesMark } from './Poster';
 
@@ -16,6 +18,7 @@ export default function Hero({ onPlay, onResume, profileId }: { onPlay: () => vo
   const ref = useRef<HTMLElement>(null);
   const fine = useFinePointer();
   const { scrollTo } = useSmoothScroll();
+  const [hudMode] = useHudMode();
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
   const imgY = useTransform(scrollYProgress, [0, 1], ['0%', '18%']);
@@ -126,6 +129,20 @@ export default function Hero({ onPlay, onResume, profileId }: { onPlay: () => vo
           {profile.seriesTag}
         </motion.p>
 
+        {hudMode && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-emerald-400/40 bg-emerald-950/40 px-3 py-1.5 font-mono text-xs text-emerald-300 backdrop-blur-md"
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold">ENGINEERING TELEMETRY:</span>
+            <span>AWS / SPARK / KAFKA: OPTIMAL</span>
+            <span className="text-emerald-500">•</span>
+            <span>PROD SLA: 99.99%</span>
+          </motion.div>
+        )}
+
         <motion.div variants={item} className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px] font-medium text-mist">
           <span className="rounded border border-white/25 px-1.5 py-px text-[10px] font-bold tracking-wider text-bone">DATA·ENG</span>
           {meta.map((m, i) => (
@@ -149,7 +166,10 @@ export default function Hero({ onPlay, onResume, profileId }: { onPlay: () => vo
             <button
               type="button"
               data-cursor="play"
-              onClick={onPlay}
+              onClick={() => {
+                playUiClick();
+                onPlay();
+              }}
               className="flex min-h-12 items-center gap-3 rounded-md bg-bone px-6 py-3 text-[15px] font-bold text-ink transition hover:bg-white sm:px-8"
             >
               <span className="text-lg">▶</span> Play Intro

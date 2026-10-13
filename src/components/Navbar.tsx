@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from 'framer-motion';
 import { sectionMeta, viewerProfiles, type ProfileId, type SectionId } from '../data/portfolio';
 import { useSmoothScroll } from '../hooks/smoothScroll';
+import { useAudioMute, useHudMode } from '../hooks/useTelemetryHud';
+import { playUiClick } from '../utils/sound';
 import { SeriesMark } from './Poster';
 import { ProfileAvatar } from './ProfileSelector';
 import { EASE } from './fx';
@@ -13,6 +15,8 @@ export default function Navbar({ order, profileId, onSwitch }: { order: SectionI
   const [menu, setMenu] = useState(false);
   const [mobileNav, setMobileNav] = useState(false);
   const [active, setActive] = useState<string>('top');
+  const [hudMode, toggleHud] = useHudMode();
+  const [muted, toggleMute] = useAudioMute();
   const { scrollTo } = useSmoothScroll();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -76,11 +80,41 @@ export default function Navbar({ order, profileId, onSwitch }: { order: SectionI
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Telemetry HUD Toggle */}
+          <button
+            type="button"
+            onClick={() => toggleHud()}
+            title={hudMode ? 'HUD Active — click to return to Cinema view' : 'Activate Data Telemetry HUD'}
+            aria-label="Toggle Data Telemetry HUD"
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-mono tracking-wider transition border ${
+              hudMode
+                ? 'border-emerald-400/50 bg-emerald-950/60 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'border-white/10 bg-white/[0.04] text-mist hover:border-white/25 hover:text-bone'
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${hudMode ? 'bg-emerald-400 animate-pulse' : 'bg-smoke'}`} />
+            <span className="font-semibold">{hudMode ? 'HUD ON' : 'HUD'}</span>
+          </button>
+
+          {/* Audio FX Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              toggleMute();
+              playUiClick();
+            }}
+            title={muted ? 'Unmute Audio FX' : 'Mute Audio FX'}
+            aria-label={muted ? 'Unmute Audio FX' : 'Mute Audio FX'}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-xs text-bone transition hover:border-white/30 hover:bg-white/10"
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
+
           <button
             type="button"
             onClick={() => go('contact')}
-            className="hidden rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-bone transition hover:border-crimson-2 hover:text-crimson-2 sm:block"
+            className="hidden rounded-full border border-white/15 px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-bone transition hover:border-crimson-2 hover:text-crimson-2 md:block"
           >
             LET&apos;S BUILD
           </button>

@@ -99,6 +99,26 @@ export const experience = [
 
 export type Metric = { value: string; label: string };
 
+export type PipelineStage = {
+  stage: string;
+  tool: string;
+  desc: string;
+  metric: string;
+};
+
+export type SampleQuery = {
+  language: 'sql' | 'python';
+  title: string;
+  code: string;
+};
+
+export type TelemetrySpec = {
+  throughput: string;
+  sla: string;
+  latency: string;
+  engine: string;
+};
+
 export type Project = {
   id: string;
   title: string;
@@ -112,6 +132,9 @@ export type Project = {
   github?: string;
   palette: Palette;
   motif: 'shield' | 'flow' | 'tenants';
+  telemetry: TelemetrySpec;
+  pipelineStages: PipelineStage[];
+  sampleQuery: SampleQuery;
 };
 
 export const projects: Project[] = [
@@ -144,6 +167,44 @@ export const projects: Project[] = [
     github: 'https://github.com/krishnasidhvi',
     palette: crimson,
     motif: 'flow',
+    telemetry: {
+      throughput: '48,000 EPS',
+      sla: '99.99%',
+      latency: '<45ms',
+      engine: 'Kafka 3.4 & AWS Lambda',
+    },
+    pipelineStages: [
+      { stage: 'Source', tool: 'Payment Gateways', desc: 'Credit card transaction authorization event bus', metric: '48k events/sec' },
+      { stage: 'Ingestion', tool: 'Apache Kafka', desc: 'Partitioned event topics with replication factor 3 for zero data loss', metric: 'Sub-10ms buffer' },
+      { stage: 'Compute', tool: 'AWS Lambda (Python)', desc: 'Stateless serverless anomaly scoring micro-workers', metric: '+25% accuracy' },
+      { stage: 'Storage', tool: 'MongoDB Cluster', desc: 'Sharded schema-less document store for transaction payloads', metric: '100% persistent' },
+      { stage: 'Serving', tool: 'Real-Time Alert HUD', desc: 'Automated high-risk transaction holds and fraud alerts', metric: '<50ms latency' },
+    ],
+    sampleQuery: {
+      language: 'python',
+      title: 'Kafka Streaming Fraud Evaluation Worker (Python)',
+      code: `from pyspark.sql import SparkSession
+from pyspark.sql.functions import from_json, col, when
+
+spark = SparkSession.builder.appName("FraudStreamProcessor").getOrCreate()
+
+tx_schema = "transaction_id STRING, user_id STRING, amount DOUBLE, location STRING, timestamp TIMESTAMP"
+
+raw_stream = spark.readStream.format("kafka") \\
+    .option("kafka.bootstrap.servers", "kafka-broker:9092") \\
+    .option("subscribe", "credit-card-transactions").load()
+
+parsed_stream = raw_stream.select(from_json(col("value").cast("string"), tx_schema).alias("tx")).select("tx.*")
+
+scored_stream = parsed_stream.withColumn(
+    "is_fraud_suspect",
+    when((col("amount") > 5000.0) | (col("location") == "FLAGGED_GEO"), True).otherwise(False)
+)
+
+query = scored_stream.writeStream.format("mongodb") \\
+    .option("checkpointLocation", "s3://fraud-checkpoints/prod/") \\
+    .outputMode("append").start()`,
+    },
   },
   {
     id: 'number-plate-detection',
@@ -174,6 +235,47 @@ export const projects: Project[] = [
     github: 'https://github.com/krishnasidhvi',
     palette: ocean,
     motif: 'shield',
+    telemetry: {
+      throughput: '60 FPS',
+      sla: '99.5%',
+      latency: '16ms/frame',
+      engine: 'YOLO CNN & OpenCV',
+    },
+    pipelineStages: [
+      { stage: 'Capture', tool: 'CCTV Video Streams', desc: 'High-definition 1080p road sensor & traffic surveillance feeds', metric: '60 FPS RTSP' },
+      { stage: 'Preprocessing', tool: 'OpenCV Pipeline', desc: 'Frame resizing, adaptive histogram equalization & blur filtering', metric: '2.4ms per frame' },
+      { stage: 'Detection', tool: 'YOLO-based CNN', desc: 'Deep convolutional layers isolating vehicle registration bounding boxes', metric: '95% Accuracy' },
+      { stage: 'OCR Extraction', tool: 'Tesseract & Tensor', desc: 'Character segmentation & alphanumeric transcription', metric: 'Zero manual review' },
+      { stage: 'Dispatch', tool: 'Traffic Database', desc: 'Automatic violation logging & city authority telemetry', metric: 'Real-time alerts' },
+    ],
+    sampleQuery: {
+      language: 'python',
+      title: 'OpenCV & YOLO Frame Extraction Inference',
+      code: `import cv2
+import numpy as np
+
+def process_video_frame(frame, net, output_layers):
+    height, width, _ = frame.shape
+    blob = cv2.dnn.blobFromImage(frame, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+    net.setInput(blob)
+    outs = net.forward(output_layers)
+
+    boxes, confidences = [], []
+    for out in outs:
+        for detection in out:
+            scores = detection[5:]
+            class_id = np.argmax(scores)
+            confidence = scores[class_id]
+            if confidence > 0.85 and class_id == 0:  # Plate Target Class
+                center_x = int(detection[0] * width)
+                center_y = int(detection[1] * height)
+                w = int(detection[2] * width)
+                h = int(detection[3] * height)
+                boxes.append([center_x - w // 2, center_y - h // 2, w, h])
+                confidences.append(float(confidence))
+
+    return boxes, confidences`,
+    },
   },
   {
     id: 'chicago-crime-analytics',
@@ -204,6 +306,43 @@ export const projects: Project[] = [
     github: 'https://github.com/krishnasidhvi',
     palette: amber,
     motif: 'tenants',
+    telemetry: {
+      throughput: '7.8M Rows',
+      sla: '99.8%',
+      latency: '<1.2s',
+      engine: 'Scikit-Learn & Tableau',
+    },
+    pipelineStages: [
+      { stage: 'Raw Logs', tool: 'Municipal Data API', desc: '7.8M city-wide crime incident reports & emergency dispatch logs', metric: 'Historical + Daily' },
+      { stage: 'Data Prep', tool: 'Pandas & NumPy', desc: 'Missing geo imputation, outlier removal & temporal cyclical features', metric: '100% clean data' },
+      { stage: 'ML Modeling', tool: 'Scikit-Learn Classifier', desc: 'Spatial-temporal multi-class gradient boosting risk models', metric: '-12% Crime impact' },
+      { stage: 'Data Mart', tool: 'Curated SQLite / CSV', desc: 'Aggregated sector crime probability indices & census overlays', metric: 'Sub-second read' },
+      { stage: 'Executive BI', tool: 'Tableau Command Map', desc: 'Interactive heatmaps & police patrol allocation dashboard', metric: 'Tactical dispatch' },
+    ],
+    sampleQuery: {
+      language: 'sql',
+      title: 'High-Risk Precinct Incident Aggregation (SQL)',
+      code: `WITH SectorRiskCTE AS (
+  SELECT
+    district_id,
+    primary_type AS crime_type,
+    DATE_TRUNC('month', incident_date) AS incident_month,
+    COUNT(*) AS total_incidents,
+    ROUND(AVG(CASE WHEN arrest_made = TRUE THEN 1.0 ELSE 0.0 END) * 100, 2) AS arrest_rate_pct
+  FROM chicago_crime_data
+  WHERE incident_date >= '2022-01-01'
+  GROUP BY 1, 2, 3
+)
+SELECT
+  district_id,
+  SUM(total_incidents) AS annual_crime_volume,
+  ROUND(AVG(arrest_rate_pct), 2) AS avg_clearance_rate,
+  DENSE_RANK() OVER (ORDER BY SUM(total_incidents) DESC) AS patrol_priority_rank
+FROM SectorRiskCTE
+GROUP BY district_id
+ORDER BY annual_crime_volume DESC
+LIMIT 10;`,
+    },
   },
   {
     id: 'amazon-cloud-lakehouse',
@@ -234,6 +373,37 @@ export const projects: Project[] = [
     ],
     palette: jade,
     motif: 'flow',
+    telemetry: {
+      throughput: '12 TB Daily',
+      sla: '99.95%',
+      latency: '<40s query',
+      engine: 'AWS Glue, Redshift & Athena',
+    },
+    pipelineStages: [
+      { stage: 'Ingest', tool: 'REST APIs & Operational DBs', desc: 'Automated multi-region extraction via AWS Data Pipeline', metric: '-25% manual effort' },
+      { stage: 'ETL Spark', tool: 'AWS Glue Serverless', desc: 'Partitioned PySpark transformations & schema evolution checks', metric: '+30% reliability' },
+      { stage: 'Quality Gate', tool: 'Python Validation Engine', desc: 'Automated null, range, uniqueness and anomaly detectors', metric: '-50% anomalies' },
+      { stage: 'Lakehouse', tool: 'AWS Redshift & S3 Parquet', desc: 'Columnar storage optimized with sort keys & distribution keys', metric: '12 TB dataset' },
+      { stage: 'Query Server', tool: 'Amazon Athena & BI', desc: 'Serverless federated interactive SQL for executive month-end closes', metric: 'Sub-minute SLA' },
+    ],
+    sampleQuery: {
+      language: 'sql',
+      title: 'Amazon Athena Partition Pruning Query (SQL)',
+      code: `SELECT
+  vendor_region,
+  business_unit,
+  product_category,
+  COUNT(DISTINCT transaction_id) AS total_orders,
+  ROUND(SUM(gross_merchandise_value), 2) AS net_gmv,
+  ROUND(AVG(fulfillment_latency_hours), 1) AS avg_delivery_hrs
+FROM "lakehouse_gold"."financial_ledger_partitioned"
+WHERE year = '2024'
+  AND month = '01'
+  AND reconciliation_status = 'VERIFIED'
+GROUP BY vendor_region, business_unit, product_category
+HAVING SUM(gross_merchandise_value) > 100000.00
+ORDER BY net_gmv DESC;`,
+    },
   },
   {
     id: 'global-payments-telemetry',
@@ -263,6 +433,51 @@ export const projects: Project[] = [
     ],
     palette: crimson,
     motif: 'shield',
+    telemetry: {
+      throughput: '120k TPS',
+      sla: '99.99%',
+      latency: '<30ms',
+      engine: 'AWS Redshift, Informatica & Tableau',
+    },
+    pipelineStages: [
+      { stage: 'Transaction Flow', tool: 'Multi-Channel Gateways', desc: 'Global card present & e-commerce transaction authorization streams', metric: '120k TPS' },
+      { stage: 'Enterprise ETL', tool: 'Informatica PowerCenter', desc: 'High-availability workflow mapping connecting to AWS Redshift', metric: 'Zero-drop SLA' },
+      { stage: 'Data Validation', tool: 'Automated Python Shield', desc: 'Constraint validation reducing bad transaction schema noise', metric: '-40% anomalies' },
+      { stage: 'Analytics Store', tool: 'AWS Redshift Cluster', desc: 'Petabyte-scale distributed data warehouse with custom distkeys', metric: 'Multi-node cluster' },
+      { stage: 'Risk Telemetry', tool: 'Tableau Operational Suite', desc: 'Live fraud false-positive tracking and merchant success rates', metric: '-15% false alarms' },
+    ],
+    sampleQuery: {
+      language: 'sql',
+      title: 'Redshift Staging Upsert & Telemetry Load (SQL)',
+      code: `BEGIN TRANSACTION;
+
+DELETE FROM dw_prod.fct_payment_telemetry
+USING stg.payment_stream_buffer
+WHERE dw_prod.fct_payment_telemetry.payment_id = stg.payment_stream_buffer.payment_id;
+
+INSERT INTO dw_prod.fct_payment_telemetry (
+  payment_id,
+  merchant_id,
+  channel,
+  amount_usd,
+  fraud_risk_score,
+  is_false_positive_flag,
+  authorization_status,
+  processed_at
+)
+SELECT
+  payment_id,
+  merchant_id,
+  channel,
+  amount_usd,
+  fraud_risk_score,
+  CASE WHEN fraud_risk_score > 0.85 AND manual_override = TRUE THEN 1 ELSE 0 END,
+  authorization_status,
+  CURRENT_TIMESTAMP
+FROM stg.payment_stream_buffer;
+
+END TRANSACTION;`,
+    },
   },
   {
     id: 'vanguard-kpi-lakehouse',
@@ -291,6 +506,37 @@ export const projects: Project[] = [
     ],
     palette: violet,
     motif: 'tenants',
+    telemetry: {
+      throughput: '500+ Portfolios',
+      sla: '99.9%',
+      latency: 'Live Refresh',
+      engine: 'Azure Data Factory & Tableau',
+    },
+    pipelineStages: [
+      { stage: 'Source DBs', tool: 'SQL Server & PostgreSQL', desc: 'Institutional portfolio positions, trading logs & custodial records', metric: 'Multi-cloud' },
+      { stage: 'Orchestration', tool: 'Azure Data Factory (ADF)', desc: 'Scheduled & event-driven ETL pipelines with REST API links', metric: 'Automated flows' },
+      { stage: 'Federation', tool: 'Azure Fabric Lakehouse', desc: 'Cross-platform unified data access layer across environments', metric: 'Zero silos' },
+      { stage: 'Semantic Model', tool: 'Analysis Services Datamart', desc: 'Pre-calculated portfolio returns, risk betas and Sharpe ratios', metric: '+15% efficiency' },
+      { stage: 'Dual BI Suite', tool: 'Tableau & Power BI Sync', desc: 'Executive KPI monitoring & multi-department self-service reporting', metric: 'Live sync' },
+    ],
+    sampleQuery: {
+      language: 'sql',
+      title: 'Portfolio Operational Efficiency Metrics (SQL)',
+      code: `SELECT
+  p.portfolio_code,
+  p.fund_manager_name,
+  p.asset_class,
+  COUNT(t.trade_id) AS total_settled_trades,
+  ROUND(AVG(t.execution_slippage_bps), 2) AS avg_slippage_bps,
+  ROUND(SUM(t.trade_value_usd), 2) AS cumulative_aum_traded,
+  ROUND((1.0 - (COUNT(CASE WHEN t.status = 'EXCEPTION' THEN 1 END) * 1.0 / COUNT(t.trade_id))) * 100, 2) AS operational_efficiency_pct
+FROM core_portfolio_db.portfolios p
+JOIN core_trading_db.trades t ON p.portfolio_id = t.portfolio_id
+WHERE t.settlement_date >= CURRENT_DATE - INTERVAL '30 day'
+GROUP BY p.portfolio_code, p.fund_manager_name, p.asset_class
+HAVING COUNT(t.trade_id) > 50
+ORDER BY operational_efficiency_pct DESC;`,
+    },
   },
 ];
 

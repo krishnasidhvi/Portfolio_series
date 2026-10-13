@@ -1,9 +1,18 @@
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { Project } from '../data/portfolio';
 import { EASE, Tilt } from './fx';
 import { ProjectArt } from './Poster';
+import { useHudMode } from '../hooks/useTelemetryHud';
+import { playUiClick } from '../utils/sound';
 
 export default function ProjectCard({ project, index, onOpen }: { project: Project; index: number; onOpen: () => void }) {
+  const [hudMode] = useHudMode();
+
+  const handleOpen = () => {
+    playUiClick();
+    onOpen();
+  };
+
   return (
     <motion.article
       className="w-[84vw] shrink-0 snap-start sm:w-[62vw] lg:w-[46vw] xl:w-[42vw]"
@@ -17,11 +26,11 @@ export default function ProjectCard({ project, index, onOpen }: { project: Proje
           role="button"
           tabIndex={0}
           data-cursor="view"
-          onClick={onOpen}
+          onClick={handleOpen}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              onOpen();
+              handleOpen();
             }
           }}
           aria-label={`Open ${project.title}`}
@@ -38,6 +47,30 @@ export default function ProjectCard({ project, index, onOpen }: { project: Proje
             <span className="text-[10px] font-bold tracking-[0.34em] text-bone/80">ORIGINAL</span>
           </div>
           <span className="absolute right-5 top-5 rounded border border-white/30 px-1.5 py-px text-[10px] font-bold text-bone sm:right-7 sm:top-7">{project.year}</span>
+
+          <AnimatePresence>
+            {hudMode && project.telemetry && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-x-5 top-14 z-20 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-400/35 bg-ink/90 px-3 py-1.5 font-mono text-[11px] text-emerald-400 shadow-xl backdrop-blur-md sm:inset-x-7"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="font-semibold text-emerald-300">LIVE HUD</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] sm:text-[11px]">
+                  <span>{project.telemetry.throughput}</span>
+                  <span className="text-white/20">•</span>
+                  <span>{project.telemetry.latency}</span>
+                  <span className="text-white/20">•</span>
+                  <span className="font-semibold text-emerald-300">{project.telemetry.sla}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 [transform:translateZ(40px)]">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-mist">{project.genre}</p>
